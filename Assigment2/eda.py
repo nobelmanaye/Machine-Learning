@@ -55,9 +55,14 @@ cm = np.corrcoef(df[cols].values.T)
 hm = heatmap(cm, row_names=cols, column_names=cols)
 plt.show()
 
-training = df.sample(frac = 0.8)
-testing = df.drop(training.index)
+oldtraining = df.sample(frac = 0.8)
+testing = df.drop(oldtraining.index)
 
+training = oldtraining.drop(labels ='total_bedrooms', axis =1)
+
+normalized = (training-training.mean())/(training.std())
+
+training = normalized
 print(training)
 
 
