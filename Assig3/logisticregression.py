@@ -8,6 +8,27 @@ import matplotlib.pyplot as plt
 import matplotlib
 from sklearn.linear_model import LogisticRegression
 from distutils.version import LooseVersion
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+import numpy as np
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import cross_val_score
+import matplotlib.pyplot as plt
+from sklearn.model_selection import learning_curve
+from sklearn.model_selection import validation_curve
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.metrics import make_scorer
+from sklearn.metrics import roc_curve, auc
+from scipy import interp
+from sklearn.utils import resample
 from eda import*
 # Function to show separation of classes DO NOT PAY ATTENTION TO THIS
 def plot_decision_regions(X, y, classifier, test_idx=None, resolution=0.02):
@@ -127,7 +148,7 @@ class LogisticRegressionGD(object):
     cost_ : list
       Logistic cost function value in each epoch.
     """
-    def __init__(self, eta=0.05, n_iter=100, random_state=1):
+    def __init__(self, eta=0.2, n_iter=100, random_state=1):
         self.eta = eta
         self.n_iter = n_iter
         self.random_state = random_state
@@ -172,25 +193,77 @@ class LogisticRegressionGD(object):
 
 X_train_01_subset = X_train_std[(y_train == 0) | (y_train == 1)]
 y_train_01_subset = y_train[(y_train == 0) | (y_train == 1)]
-lrgd = LogisticRegressionGD(eta=0.05, n_iter=1000, random_state=1)
+lrgd = LogisticRegressionGD(eta=0.0001, n_iter=1000, random_state=1)
 lrgd.fit(X_train_01_subset,
          y_train_01_subset)
-plot_decision_regions(X=X_train_01_subset, 
-                      y=y_train_01_subset,
-                      classifier=lrgd)
-plt.xlabel('petal length [standardized]')
-plt.ylabel('petal width [standardized]')
-plt.legend(loc='upper left')
-plt.tight_layout()
-plt.show()
+# plot_decision_regions(X=X_train_01_subset, 
+#                       y=y_train_01_subset,
+#                       classifier=lrgd)
+# # plt.xlabel('petal length [standardized]')
+# plt.ylabel('petal width [standardized]')
+# plt.legend(loc='upper left')
+# plt.tight_layout()
+# plt.show()
 X_combined_std = np.vstack((X_train_std, X_test_std))
 y_combined = np.hstack((y_train, y_test))
 lr = LogisticRegression(C=100.0, random_state=1, solver='lbfgs', multi_class='ovr')
 lr.fit(X_train_std, y_train)
-plot_decision_regions(X_combined_std, y_combined,
-                      classifier=lr, test_idx=range(105, 150))
-plt.xlabel('petal length [standardized]')
-plt.ylabel('petal width [standardized]')
-plt.legend(loc='upper left')
-plt.tight_layout()
+# plot_decision_regions(X_combined_std, y_combined,
+#                       classifier=lr, test_idx=range(105, 150))
+# plt.xlabel('petal length [standardized]')
+# plt.ylabel('petal width [standardized]')
+# plt.legend(loc='upper left')
+
+plt.plot(range(1, lrgd.n_iter+1), lrgd.cost_)
+plt.ylabel('SSE')
+plt.xlabel('Epoch')
+
 plt.show()
+
+
+
+
+
+
+
+
+
+
+
+le = LabelEncoder()
+y = le.fit_transform(y)
+le.classes_
+
+X_train, X_test, y_train, y_test =     train_test_split(X, y, 
+                     test_size=0.20,
+                     stratify=y,
+                     random_state=1)
+# ## Combining transformers and estimators in a pipeline
+pipe_lr = make_pipeline(StandardScaler(),
+                        PCA(n_components=2),
+                        LogisticRegression(random_state=1, solver='lbfgs'))
+pipe_lr.fit(X_train, y_train)
+y_pred = pipe_lr.predict(X_test)
+print('Test Accuracy: %.3f' % pipe_lr.score(X_test, y_test))
+# # Using k-fold cross validation to assess model performance
+# ## The holdout method
+# ## K-fold cross-validation
+kfold = StratifiedKFold(n_splits=10).split(X_train, y_train)
+scores = []
+for k, (train, test) in enumerate(kfold):
+    pipe_lr.fit(X_train[train], y_train[train])
+    score = pipe_lr.score(X_train[test], y_train[test])
+    scores.append(score)
+    print('Fold: %2d, Class dist.: %s, Acc: %.3f' % (k+1,
+          np.bincount(y_train[train]), score))
+    
+print('\nCV accuracy: %.3f +/- %.3f' % (np.mean(scores), np.std(scores)))
+scores = cross_val_score(estimator=pipe_lr,
+                         X=X_train,
+                         y=y_train,
+                         cv=10,
+                         n_jobs=1)
+print('CV accuracy scores: %s' % scores)
+print('CV accuracy: %.3f +/- %.3f' % (np.mean(scores), np.std(scores)))
+
+

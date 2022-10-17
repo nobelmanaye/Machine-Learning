@@ -132,8 +132,9 @@ fg = plt.figure(figsize=(12,24))
 ax = fg.gca()
 
 df.hist(ax=ax)
-
+minmax(cols,df[cols])
     
+print(df)
 plt.show()
  
 
