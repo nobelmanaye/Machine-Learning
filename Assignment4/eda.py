@@ -17,7 +17,7 @@ print("hereh ===")
 for i in range(800):
 
     if df['quality'].iloc[i] in (5,6):
-        print("dropping")
+
 
         updf = df.drop(i)
         df= updf
