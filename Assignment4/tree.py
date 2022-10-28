@@ -16,7 +16,28 @@ from pydotplus import graph_from_dot_data
 from sklearn.tree import export_graphviz
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
-
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+import numpy as np
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import cross_val_score
+import matplotlib.pyplot as plt
+from sklearn.model_selection import learning_curve
+from sklearn.model_selection import validation_curve
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.metrics import make_scorer
+from sklearn.metrics import roc_curve, auc
+from scipy import interp
+from sklearn.utils import resample
 cols.remove('quality')
 
 X = df[cols]
@@ -41,9 +62,26 @@ def plot_decision_regions(X, y, classifier, test_idx=None, resolution=0.02):
     # plot the decision surface
     x1_min, x1_max = X[:, 0].min() - 1, X[:, 0].max() + 1
     x2_min, x2_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    x3_min, x3_max = X[:, 2].min() - 1, X[:, 2].max() + 1
+    x4_min, x4_max = X[:, 3].min() - 1, X[:, 3].max() + 1
+    x5_min, x5_max = X[:, 4].min() - 1, X[:, 4].max() + 1
+    x6_min, x6_max = X[:, 5].min() - 1, X[:, 5].max() + 1
+    x7_min, x7_max = X[:, 6].min() - 1, X[:, 6].max() + 1
+    x8_min, x8_max = X[:, 7].min() - 1, X[:, 7].max() + 1
+    x9_min, x9_max = X[:, 8].min() - 1, X[:, 8].max() + 1
+
     xx1, xx2 = np.meshgrid(np.arange(x1_min, x1_max, resolution),
-                           np.arange(x2_min, x2_max, resolution))
-    Z = classifier.predict(np.array([xx1.ravel(), xx2.ravel()]).T)
+                           np.arange(x2_min, x2_max, resolution) )
+    xx3, xx4 = np.meshgrid(np.arange(x3_min, x3_max, resolution),
+                           np.arange(x4_min, x4_max, resolution) )
+    xx5, xx6 = np.meshgrid(np.arange(x5_min, x5_max, resolution),
+                           np.arange(x6_min, x6_max, resolution) )
+    xx7, xx8,xx9 = np.meshgrid(np.arange(x7_min, x7_max, resolution),
+                           np.arange(x8_min, x8_max, resolution),
+                           np.arange(x9_min, x9_max, resolution))
+
+
+    Z = classifier.predict(np.array([xx1.ravel(), xx2.ravel()]))
     Z = Z.reshape(xx1.shape)
     plt.contourf(xx1, xx2, Z, alpha=0.3, cmap=cmap)
     plt.xlim(xx1.min(), xx1.max())
@@ -105,11 +143,11 @@ tree_model = DecisionTreeClassifier(criterion='gini',
 tree_model.fit(X_train, y_train)
 X_combined = np.vstack((X_train, X_test))
 y_combined = np.hstack((y_train, y_test))
-# plot_decision_regions(X_combined, y_combined, 
-#                       classifier=tree_model,
-#                       test_idx=range(105, 150))
+#plot_decision_regions(X_combined, y_combined, 
+                       #classifier=tree_model,
+                      #test_idx=range(105, 150))
 
-tree.plot_tree(tree_model)
+tree.plot_tree(tree_model,fontsize=10)
 
 #plt.savefig('images/03_21_1.pdf')
 plt.show()
@@ -122,3 +160,42 @@ dot_data = export_graphviz(tree_model,
 
 graph = graph_from_dot_data(dot_data) 
 #graph.write_png('tree.png')
+
+
+#===========================================Hyperparameters=======================================
+
+pipe_svc = make_pipeline(StandardScaler(),
+                         SVC(random_state=1))
+param_range = [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
+param_grid = [{'svc__C': param_range, 
+               'svc__kernel': ['linear']},
+              {'svc__C': param_range, 
+               'svc__gamma': param_range, 
+               'svc__kernel': ['rbf']}]
+gs = GridSearchCV(estimator=pipe_svc, 
+                  param_grid=param_grid, 
+                  scoring='accuracy', 
+                  refit=True,
+                  cv=10,
+                  n_jobs=-1)
+gs = gs.fit(X_train, y_train)
+print(gs.best_score_)
+print(gs.best_params_)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##=============================================== TRAINING ================================
