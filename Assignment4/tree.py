@@ -164,15 +164,18 @@ graph = graph_from_dot_data(dot_data)
 
 #===========================================Hyperparameters=======================================
 
-pipe_svc = make_pipeline(StandardScaler(),
-                         SVC(random_state=1))
-param_range = [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
-param_grid = [{'svc__C': param_range, 
-               'svc__kernel': ['linear']},
-              {'svc__C': param_range, 
-               'svc__gamma': param_range, 
-               'svc__kernel': ['rbf']}]
-gs = GridSearchCV(estimator=pipe_svc, 
+
+
+param_grid = [{'max_depth': [3], 
+               'min_samples_split': [2],
+              'splitter': ['best','random'],
+              'min_weight_fraction_leaf':[0.3],
+              'max_features':[7],
+              'random_state':[3]
+              }]
+
+
+gs = GridSearchCV(estimator=tree_model, 
                   param_grid=param_grid, 
                   scoring='accuracy', 
                   refit=True,
@@ -183,7 +186,19 @@ print(gs.best_score_)
 print(gs.best_params_)
 
 
-
+forest = RandomForestClassifier(criterion='gini',
+                                n_estimators=25, 
+                                random_state=1,
+                                n_jobs=2)
+forest.fit(X_train, y_train)
+#plot_decision_regions(X_combined, y_combined, 
+                      #classifier=forest, test_idx=range(105, 150))
+plt.xlabel('petal length [cm]')
+plt.ylabel('petal width [cm]')
+plt.legend(loc='upper left')
+plt.tight_layout()
+#plt.savefig('images/03_22.png', dpi=300)
+plt.show()
 
 
 
