@@ -41,11 +41,7 @@ y_train_std = np.array(y_train_st)
 
 
 
-fg = plt.figure(figsize=(12,24))
 
-ax = fg.gca()
-
-df.hist(ax=ax)
 cm = np.corrcoef(df[cols].values.T)
 hm = heatmap(cm, row_names=cols, column_names=cols)
 
@@ -53,6 +49,23 @@ hm = heatmap(cm, row_names=cols, column_names=cols)
 plt.show()
 
     
+
+plt.show()
+
+
+print("This is variance before binning " + str(df['quality'].var()))
+
+qualitybin = [3,5,7,8]
+
+df['quality'] = pd.cut(df['quality'], qualitybin)
+
+print(df)
+
+fg = plt.figure(figsize=(12,24))
+
+ax = fg.gca()
+
+df.hist(ax=ax)
 
 plt.show()
 
